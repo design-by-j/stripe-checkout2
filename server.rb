@@ -1,12 +1,13 @@
 require 'stripe'
 require 'sinatra'
 
-# This is your test secret API key.
 Stripe.api_key = ENV['STRIPE_SECRET_KEY']
 
-
+set :port, ENV.fetch('PORT', 4242)   # Render kräver PORT
+set :bind, '0.0.0.0'                 # Viktigt för Render
 set :static, true
-set :port, 4242
+set :public_folder, File.dirname(__FILE__) + '/public'
+
 
 YOUR_DOMAIN = 'http://localhost:4242'
 
