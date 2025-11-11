@@ -25,8 +25,8 @@ post "/create-checkout-session" do
       quantity: 1
     }],
     mode: "payment",
-    success_url: "http://localhost:4242/success.html",
-    cancel_url: "http://localhost:4242/cancel.html"
+    success_url: "http://127.0.0.1:4567/success",
+    cancel_url: "http://127.0.0.1:4567/cancel"
   )
 
   { id: session.id }.to_json
@@ -34,5 +34,13 @@ end
 
 get "/" do
   redirect "/index.html"
+end
+
+get '/success' do
+  send_file File.join(settings.public_folder, 'success.html')
+end
+
+get '/cancel' do
+  send_file File.join(settings.public_folder, 'cancel.html')
 end
 
