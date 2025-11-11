@@ -25,10 +25,10 @@ checking for SSL_get1_peer_certificate() in openssl/ssl.h... yes
 creating Makefile
 
 current directory: /Users/charliesvedevi/Documents/stripe-checkout/vendor/bundle/ruby/3.2.0/gems/puma-7.1.0/ext/puma_http11
-make DESTDIR\= sitearchdir\=./.gem.20251111-32190-tg3nen sitelibdir\=./.gem.20251111-32190-tg3nen clean
+make DESTDIR\= sitearchdir\=./.gem.20251111-36654-suic12 sitelibdir\=./.gem.20251111-36654-suic12 clean
 
 current directory: /Users/charliesvedevi/Documents/stripe-checkout/vendor/bundle/ruby/3.2.0/gems/puma-7.1.0/ext/puma_http11
-make DESTDIR\= sitearchdir\=./.gem.20251111-32190-tg3nen sitelibdir\=./.gem.20251111-32190-tg3nen
+make DESTDIR\= sitearchdir\=./.gem.20251111-36654-suic12 sitelibdir\=./.gem.20251111-36654-suic12
 compiling http11_parser.c
 compiling mini_ssl.c
 compiling puma_http11.c
@@ -36,8 +36,8 @@ linking shared-object puma/puma_http11.bundle
 ld: warning: ignoring duplicate libraries: '-lruby.3.2'
 
 current directory: /Users/charliesvedevi/Documents/stripe-checkout/vendor/bundle/ruby/3.2.0/gems/puma-7.1.0/ext/puma_http11
-make DESTDIR\= sitearchdir\=./.gem.20251111-32190-tg3nen sitelibdir\=./.gem.20251111-32190-tg3nen install
-/usr/bin/install -c -m 0755 puma_http11.bundle ./.gem.20251111-32190-tg3nen/puma
+make DESTDIR\= sitearchdir\=./.gem.20251111-36654-suic12 sitelibdir\=./.gem.20251111-36654-suic12 install
+/usr/bin/install -c -m 0755 puma_http11.bundle ./.gem.20251111-36654-suic12/puma
 
 current directory: /Users/charliesvedevi/Documents/stripe-checkout/vendor/bundle/ruby/3.2.0/gems/puma-7.1.0/ext/puma_http11
-make DESTDIR\= sitearchdir\=./.gem.20251111-32190-tg3nen sitelibdir\=./.gem.20251111-32190-tg3nen clean
+make DESTDIR\= sitearchdir\=./.gem.20251111-36654-suic12 sitelibdir\=./.gem.20251111-36654-suic12 clean
