@@ -5,5 +5,6 @@ ruby "3.2.2"
 gem 'sinatra'
 gem 'stripe'
 gem 'puma'
+gem "rackup"
 
 
