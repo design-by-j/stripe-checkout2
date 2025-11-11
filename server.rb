@@ -13,16 +13,17 @@ set :public_folder, File.dirname(__FILE__) + '/public'
 YOUR_DOMAIN = 'http://localhost:4242'
 
 get "/" do
-  "Hello from Stripe Checkout app — deployment successful! 🚀"
+  send_file File.join(settings.public_folder, 'index.html')
 end
+
 
 post '/create-checkout-session' do
   content_type 'application/json'
 
   session = Stripe::Checkout::Session.create(
     mode: 'payment',
-    success_url: 'https://stripe-checkout-j8yl.onrender.com/success',
-    cancel_url: 'https://stripe-checkout-j8yl.onrender.com/cancel',
+    success_url: 'https://stripe-checkout-j8yl.onrender.com/return.html',
+    cancel_url: 'https://stripe-checkout-j8yl.onrender.com/index.html',
     line_items: [{
       price_data: {
         currency: 'usd',
