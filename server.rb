@@ -19,6 +19,37 @@ end
 post '/create-checkout-session' do
   content_type 'application/json'
 
+  session = Stripe::Checkout::Session.create(
+    mode: 'payment',
+    success_url: 'https://stripe-checkout-j8yl.onrender.com/success',
+    cancel_url: 'https://stripe-checkout-j8yl.onrender.com/cancel',
+    line_items: [{
+      price_data: {
+        currency: 'usd',
+        product_data: {
+          name: 'T-shirt'
+        },
+        unit_amount: 2000, # $20.00
+      },
+      quantity: 1
+    }]
+  )
+
+  { url: session.url }.to_json
+end
+
+get '/success' do
+  "<h1>✅ Payment successful!</h1>"
+end
+
+get '/cancel' do
+  "<h1>❌ Payment canceled.</h1>"
+end
+
+
+post '/create-checkout-session' do
+  content_type 'application/json'
+
   session = Stripe::Checkout::Session.create({
     ui_mode: 'embedded',
     line_items: [{
