@@ -1,3 +1,4 @@
+
 require 'stripe'
 require 'sinatra'
 
@@ -10,6 +11,10 @@ set :public_folder, File.dirname(__FILE__) + '/public'
 
 
 YOUR_DOMAIN = 'http://localhost:4242'
+
+get "/" do
+  "Hello from Stripe Checkout app — deployment successful! 🚀"
+end
 
 post '/create-checkout-session' do
   content_type 'application/json'
