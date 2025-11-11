@@ -25,8 +25,8 @@ post "/create-checkout-session" do
       quantity: 1
     }],
     mode: "payment",
-    success_url: "http://127.0.0.1:4567/success",
-    cancel_url: "http://127.0.0.1:4567/cancel"
+    success_url: "https://stripe-checkout2-1.onrender.com/success",
+    cancel_url: "https://stripe-checkout2-1.onrender.com/cancel"
   )
 
   { id: session.id }.to_json
