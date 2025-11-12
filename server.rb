@@ -104,7 +104,10 @@ halt 400, { error: "No valid products available (sold out?)" }.to_json if normal
       mode: "payment",
       success_url: "https://stripe-checkout2-1.onrender.com/success",
       cancel_url: "https://stripe-checkout2-1.onrender.com/cancel",
-      metadata: { products: normalized_ids.join(",") }
+      metadata: { products: normalized_ids.join(",") },
+      shipping_address_collection: {
+    allowed_countries: ["SE"]  # Du kan lägga till fler länder, t.ex. ["SE", "NO", "DK"]
+  }
     )
   rescue Stripe::StripeError => e
     halt 500, { error: e.message }.to_json
@@ -142,6 +145,9 @@ post "/webhook" do
       products_bought.each do |product_id|
         PRODUCTS_CATALOG[product_id][:sold] = true if PRODUCTS_CATALOG[product_id]
       end
+      # Hämta shipping info
+  shipping_info = session.shipping
+  puts "Kundens adress: #{shipping_info}"
     end
 
     status 200
