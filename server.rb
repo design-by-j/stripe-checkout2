@@ -3,6 +3,20 @@ require "stripe"
 require "sinatra/cross_origin"
 require 'dotenv/load'
 require "json"
+require 'mail'
+
+options = {
+  address: "smtp.mail.me.com",
+  port: 587,
+  user_name: ENV['EMAIL'],       # ex: johannabsvensson@icloud.com
+  password: ENV['EMAIL_PASSWORD'], # ditt appspecifika lösenord
+  authentication: 'plain',
+  enable_starttls_auto: true
+}
+
+Mail.defaults do
+  delivery_method :smtp, options
+end
 
 configure do
   enable :cross_origin
@@ -155,6 +169,20 @@ post "/webhook" do
   puts "Kundens email: #{customer_email}"
   puts "Kundens adress: #{shipping_info}"
 
+  begin
+        Mail.deliver do
+          from     ENV['EMAIL']
+          to       ENV['EMAIL']   # skickas till dig själv
+          subject  "Ny order från webbshop"
+          body     "Ny order:\n\n" \
+                   "Kund: #{customer_name}\n" \
+                   "Email: #{customer_email}\n" \
+                   "Adress: #{shipping_info.to_h}\n" \
+                   "Produkter: #{products_bought.join(', ')}"
+        end
+      rescue => e
+        puts "Fel vid skickande av mejl: #{e.message}"
+      end
     end
 
     status 200

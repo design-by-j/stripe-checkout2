@@ -9,4 +9,5 @@ gem "rackup", "~> 2.2"
 
 gem "dotenv"
 gem "sinatra-cross_origin"
+gem 'mail'
 
