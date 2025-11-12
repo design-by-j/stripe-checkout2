@@ -10,8 +10,9 @@ include SendGrid
 def send_order_email(session)
   begin
     # Skapa från- och till-adresser
-    from = SendGrid::Email.new(email: ENV['SENDGRID_FROM'])
-    to   = SendGrid::Email.new(email: ENV['SENDGRID_TO'])
+    from = Email.new(email: ENV['SENDGRID_FROM'])
+    to   = Email.new(email: ENV['SENDGRID_TO'])
+
     subject = "Ny order från webbshop"
 
     # Bygg textinnehåll säkert
