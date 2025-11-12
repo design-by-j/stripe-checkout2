@@ -145,9 +145,11 @@ post "/webhook" do
       products_bought.each do |product_id|
         PRODUCTS_CATALOG[product_id][:sold] = true if PRODUCTS_CATALOG[product_id]
       end
-      # Hämta shipping info
-  shipping_info = session.shipping
-  puts "Kundens adress: #{shipping_info}"
+
+      # Hämta shipping info korrekt
+      shipping_info = session.dig("collected_information", "shipping_details")
+      puts "Kundens adress: #{shipping_info}"
+
     end
 
     status 200
