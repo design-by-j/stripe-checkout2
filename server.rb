@@ -128,26 +128,28 @@ get '/cancel' do
 end
 
 post "/webhook" do
-  payload = request.body.read
-  sig_header = request.env['HTTP_STRIPE_SIGNATURE']
-  endpoint_secret = ENV['STRIPE_WEBHOOK_SECRET'] # sätt webhook secret i Render
-
   begin
+    payload = request.body.read
+    sig_header = request.env['HTTP_STRIPE_SIGNATURE']
+    endpoint_secret = ENV['STRIPE_WEBHOOK_SECRET']
+
     event = Stripe::Webhook.construct_event(payload, sig_header, endpoint_secret)
-  rescue JSON::ParserError, Stripe::SignatureVerificationError => e
-    halt 400, "Invalid payload or signature"
-  end
 
-  case event.type
-  when 'checkout.session.completed'
-    session = event.data.object
-    products_bought = session.metadata.products.split(",") # ["pearls","blue_emerald"]
-
-    products_bought.each do |product_id|
-      products_catalog[product_id][:sold] = true if products_catalog[product_id]
+    case event.type
+    when 'checkout.session.completed'
+      session = event.data.object
+      products_bought = session.metadata.products&.split(",") || []
+      products_bought.each do |product_id|
+        products_catalog[product_id][:sold] = true if products_catalog[product_id]
+      end
     end
-  end
 
-  status 200
+    status 200
+  rescue => e
+    puts "Webhook error: #{e.message}"
+    puts e.backtrace
+    halt 500, "Webhook Error"
+  end
 end
+
 
