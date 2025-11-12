@@ -22,6 +22,22 @@ Stripe.api_key = ENV['STRIPE_SECRET_KEY']
 
 set :public_folder, "public"
 
+# Lägg detta högst upp, efter require och konfiguration
+PRODUCTS_CATALOG = {
+  "pearls" => { name: "Pearls", price: 69900, sold: false },
+  "green_drops" => { name: "Green Drops", price: 69900, sold: false },
+  "crystal_clear" => { name: "Crystal Clear", price: 69900, sold: false },
+  "blue_emerald" => { name: "Blue Emerald", price: 79900, sold: false },
+  "moonlight" => { name: "Moonlight", price: 79900, sold: false },
+  "gold_leaf" => { name: "Gold Leaf", price: 69900, sold: false },
+  "emerald_green_angel" => { name: "Emerald Green Angel", price: 79900, sold: false },
+  "golden_elegance" => { name: "Golden Elegance", price: 79900, sold: false },
+  "peace_heart" => { name: "Peace Heart", price: 69900, sold: false },
+  "crystal_luxury" => { name: "Crystal Luxury", price: 79900, sold: false },
+  "true_starlight" => { name: "True Starlight", price: 69900, sold: false },
+  "glass_drops" => { name: "Glass Drops", price: 79900, sold: false }
+}
+
 post "/create-checkout-session" do
   content_type :json
   headers "Access-Control-Allow-Origin" => "*"  # CORS
@@ -43,34 +59,18 @@ post "/create-checkout-session" do
     halt 400, { error: "No product_id or products provided" }.to_json
   end
 
-  # Produktkatalog (nycklar = id som servern använder), priser i öre
-  products_catalog = {
-    "pearls" => { name: "Pearls", price: 69900, sold: false },
-    "green_drops" => { name: "Green Drops", price: 69900, sold: false },
-    "crystal_clear" => { name: "Crystal Clear", price: 69900, sold: false },
-    "blue_emerald" => { name: "Blue Emerald", price: 79900, sold: false },
-    "moonlight" => { name: "Moonlight", price: 79900, sold: false },
-    "gold_leaf" => { name: "Gold Leaf", price: 69900, sold: false },
-    "emerald_green_angel" => { name: "Emerald Green Angel", price: 79900, sold: false },
-    "golden_elegance" => { name: "Golden Elegance", price: 79900, sold: false },
-    "peace_heart" => { name: "Peace Heart", price: 69900, sold: false },
-    "crystal_luxury" => { name: "Crystal Luxury", price: 79900, sold: false },
-    "true_starlight" => { name: "True Starlight", price: 69900, sold: false },
-    "glass_drops" => { name: "Glass Drops", price: 79900, sold: false }
-  }
-
   # Om frontend skickar visningsnamn (t ex "Pearls"), mappa dem till id:
   # Normaliserar både id och namn till lowercase för matchning.
   name_to_id = {}
-  products_catalog.each { |id, info| name_to_id[info[:name].downcase] = id }
+  PRODUCTS_CATALOG.each { |id, info| name_to_id[info[:name].downcase] = id }
 
   # Normalisera indata: om element är display-namn, konvertera till id
   normalized_ids = product_ids.map do |p|
   next nil if p.nil?
   key = p.to_s.strip.downcase
-  if products_catalog.key?(key) && !products_catalog[key][:sold]
+  if PRODUCTS_CATALOG.key?(key) && !PRODUCTS_CATALOG[key][:sold]
     key
-  elsif name_to_id.key?(key) && !products_catalog[name_to_id[key]][:sold]
+  elsif name_to_id.key?(key) && !PRODUCTS_CATALOG[name_to_id[key]][:sold]
     name_to_id[key]
   else
     nil
@@ -86,7 +86,7 @@ halt 400, { error: "No valid products available (sold out?)" }.to_json if normal
 
   # Bygg line_items för Stripe
   line_items = counts.map do |id, qty|
-    prod = products_catalog[id]
+    prod = PRODUCTS_CATALOG[id]
     {
       price_data: {
         currency: "sek",
@@ -140,7 +140,7 @@ post "/webhook" do
       session = event.data.object
       products_bought = session.metadata.products&.split(",") || []
       products_bought.each do |product_id|
-        products_catalog[product_id][:sold] = true if products_catalog[product_id]
+        PRODUCTS_CATALOG[product_id][:sold] = true if PRODUCTS_CATALOG[product_id]
       end
     end
 
