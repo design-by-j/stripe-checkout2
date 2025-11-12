@@ -7,7 +7,7 @@ require 'mail'
 
 options = {
   address: "smtp.mail.me.com",
-  port: 587,
+  port: 465,
   user_name: ENV['EMAIL'],       # ex: johannabsvensson@icloud.com
   password: ENV['EMAIL_PASSWORD'], # ditt appspecifika lösenord
   authentication: 'plain',
