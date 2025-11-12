@@ -213,7 +213,7 @@ post "/webhook" do
       end
 
       # Hämta adressen
-  shipping_info = session.customer_details&.address
+  shipping_info  = session.customer_details&.address
   customer_name  = session.customer_details&.name
   customer_email = session.customer_details&.email
 
