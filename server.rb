@@ -146,9 +146,14 @@ post "/webhook" do
         PRODUCTS_CATALOG[product_id][:sold] = true if PRODUCTS_CATALOG[product_id]
       end
 
-      # Hämta shipping info korrekt
-      shipping_info = session.dig("collected_information", "shipping_details")
-      puts "Kundens adress: #{shipping_info}"
+      # Hämta adressen
+  shipping_info = session.customer_details&.address
+  customer_name  = session.customer_details&.name
+  customer_email = session.customer_details&.email
+
+  puts "Kundens namn: #{customer_name}"
+  puts "Kundens email: #{customer_email}"
+  puts "Kundens adress: #{shipping_info}"
 
     end
 
