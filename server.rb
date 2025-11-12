@@ -7,15 +7,15 @@ require 'mail'
 require 'sendgrid-ruby'
 include SendGrid
 
-# ---------- SendGrid helper ----------
 def send_order_email(session)
   begin
-    from = Email.new(email: ENV['EMAIL'] || ENV['SENDGRID_FROM'] || 'no-reply@example.com')
-    to   = Email.new(email: ENV['EMAIL'] || ENV['SENDGRID_TO'] || 'no-reply@example.com')
+    # Skapa från- och till-adresser
+    from = SendGrid::Email.new(email: ENV['SENDGRID_FROM'])
+    to   = SendGrid::Email.new(email: ENV['SENDGRID_TO'])
     subject = "Ny order från webbshop"
 
-    # bygg textinnehåll säkert (hantera nils)
-    customer_name = session.customer_details&.name || "Okänt namn"
+    # Bygg textinnehåll säkert
+    customer_name  = session.customer_details&.name || "Okänt namn"
     customer_email = session.customer_details&.email || "Okänt email"
     address = session.customer_details&.address
     address_text = if address
@@ -34,7 +34,7 @@ def send_order_email(session)
 
     content_text = <<~TEXT
       Ny order:
-      
+
       Namn: #{customer_name}
       E-post: #{customer_email}
       Adress: #{address_text}
@@ -42,20 +42,23 @@ def send_order_email(session)
       Checkout session id: #{session.id}
     TEXT
 
-    content = Content.new(type: 'text/plain', value: content_text)
-    mail = Mail.new(from, subject, to, content)
+    # Skapa mail-objekt enligt SendGrid
+    content = SendGrid::Content.new(type: 'text/plain', value: content_text)
+    mail = SendGrid::Mail.new(from, subject, to, content)
 
+    # Skicka mailet
     sg = SendGrid::API.new(api_key: ENV['SENDGRID_API_KEY'])
     response = sg.client.mail._('send').post(request_body: mail.to_json)
 
     puts "E-post skickad! Status: #{response.status_code}"
     puts "SendGrid response body: #{response.body}" if response.body && !response.body.empty?
+
   rescue => e
     puts "Fel vid skickande av mejl: #{e.message}"
     puts e.backtrace
   end
 end
-# --------------------------------------
+
 
 options = {
   address: "smtp.mail.me.com",
