@@ -27,6 +27,7 @@ GEM
       rack-protection (= 4.2.1)
       rack-session (>= 2.0.0, < 3)
       tilt (~> 2.0)
+    sinatra-cross_origin (0.4.0)
     stripe (17.2.0)
     tilt (2.6.1)
 
@@ -39,6 +40,7 @@ DEPENDENCIES
   puma
   rackup (~> 2.2)
   sinatra
+  sinatra-cross_origin
   stripe
 
 RUBY VERSION
