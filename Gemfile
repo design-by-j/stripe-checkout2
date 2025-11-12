@@ -11,3 +11,5 @@ gem "dotenv"
 gem "sinatra-cross_origin"
 gem 'mail'
 
+
+gem "sendgrid-ruby", "~> 6.7"

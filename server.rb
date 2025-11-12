@@ -4,6 +4,58 @@ require "sinatra/cross_origin"
 require 'dotenv/load'
 require "json"
 require 'mail'
+require 'sendgrid-ruby'
+include SendGrid
+
+# ---------- SendGrid helper ----------
+def send_order_email(session)
+  begin
+    from = Email.new(email: ENV['EMAIL'] || ENV['SENDGRID_FROM'] || 'no-reply@example.com')
+    to   = Email.new(email: ENV['EMAIL'] || ENV['SENDGRID_TO'] || 'no-reply@example.com')
+    subject = "Ny order från webbshop"
+
+    # bygg textinnehåll säkert (hantera nils)
+    customer_name = session.customer_details&.name || "Okänt namn"
+    customer_email = session.customer_details&.email || "Okänt email"
+    address = session.customer_details&.address
+    address_text = if address
+      [
+        address.line1,
+        address.line2,
+        address.postal_code,
+        address.city,
+        address.country
+      ].compact.join(", ")
+    else
+      "Ingen adress angiven"
+    end
+
+    products = session.metadata&.products || "Okänt"
+
+    content_text = <<~TEXT
+      Ny order:
+      
+      Namn: #{customer_name}
+      E-post: #{customer_email}
+      Adress: #{address_text}
+      Produkter: #{products}
+      Checkout session id: #{session.id}
+    TEXT
+
+    content = Content.new(type: 'text/plain', value: content_text)
+    mail = Mail.new(from, subject, to, content)
+
+    sg = SendGrid::API.new(api_key: ENV['SENDGRID_API_KEY'])
+    response = sg.client.mail._('send').post(request_body: mail.to_json)
+
+    puts "E-post skickad! Status: #{response.status_code}"
+    puts "SendGrid response body: #{response.body}" if response.body && !response.body.empty?
+  rescue => e
+    puts "Fel vid skickande av mejl: #{e.message}"
+    puts e.backtrace
+  end
+end
+# --------------------------------------
 
 options = {
   address: "smtp.mail.me.com",
@@ -169,20 +221,7 @@ post "/webhook" do
   puts "Kundens email: #{customer_email}"
   puts "Kundens adress: #{shipping_info}"
 
-  begin
-        Mail.deliver do
-          from     ENV['EMAIL']
-          to       ENV['EMAIL']   # skickas till dig själv
-          subject  "Ny order från webbshop"
-          body     "Ny order:\n\n" \
-                   "Kund: #{customer_name}\n" \
-                   "Email: #{customer_email}\n" \
-                   "Adress: #{shipping_info.to_h}\n" \
-                   "Produkter: #{products_bought.join(', ')}"
-        end
-      rescue => e
-        puts "Fel vid skickande av mejl: #{e.message}"
-      end
+  send_order_email(session)
     end
 
     status 200
