@@ -3,7 +3,6 @@ require "stripe"
 require "sinatra/cross_origin"
 require 'dotenv/load'
 require "json"
-require 'mail'
 require 'sendgrid-ruby'
 include SendGrid
 
@@ -60,19 +59,6 @@ def send_order_email(session)
   end
 end
 
-
-options = {
-  address: "smtp.mail.me.com",
-  port: 465,
-  user_name: ENV['EMAIL'],       # ex: johannabsvensson@icloud.com
-  password: ENV['EMAIL_PASSWORD'], # ditt appspecifika lösenord
-  authentication: 'plain',
-  enable_starttls_auto: true
-}
-
-Mail.defaults do
-  delivery_method :smtp, options
-end
 
 configure do
   enable :cross_origin
