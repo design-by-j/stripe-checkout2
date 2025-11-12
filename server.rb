@@ -45,18 +45,18 @@ post "/create-checkout-session" do
 
   # Produktkatalog (nycklar = id som servern använder), priser i öre
   products_catalog = {
-    "pearls" => { name: "Pearls", price: 69900 },
-    "green_drops" => { name: "Green Drops", price: 69900 },
-    "crystal_clear" => { name: "Crystal Clear", price: 69900 },
-    "blue_emerald" => { name: "Blue Emerald", price: 79900 },
-    "moonlight" => { name: "Moonlight", price: 79900 },
-    "gold_leaf" => { name: "Gold Leaf", price: 69900 },
-    "emerald_green_angel" => { name: "Emerald Green Angel", price: 79900 },
-    "golden_elegance" => { name: "Golden Elegance", price: 79900 },
-    "peace_heart" => { name: "Peace Heart", price: 69900 },
-    "crystal_luxury" => { name: "Crystal Luxury", price: 79900 },
-    "true_starlight" => { name: "True Starlight", price: 69900 },
-    "glass_drops" => { name: "Glass Drops", price: 79900 }
+    "pearls" => { name: "Pearls", price: 69900, sold: false },
+    "green_drops" => { name: "Green Drops", price: 69900, sold: false },
+    "crystal_clear" => { name: "Crystal Clear", price: 69900, sold: false },
+    "blue_emerald" => { name: "Blue Emerald", price: 79900, sold: false },
+    "moonlight" => { name: "Moonlight", price: 79900, sold: false },
+    "gold_leaf" => { name: "Gold Leaf", price: 69900, sold: false },
+    "emerald_green_angel" => { name: "Emerald Green Angel", price: 79900, sold: false },
+    "golden_elegance" => { name: "Golden Elegance", price: 79900, sold: false },
+    "peace_heart" => { name: "Peace Heart", price: 69900, sold: false },
+    "crystal_luxury" => { name: "Crystal Luxury", price: 79900, sold: false },
+    "true_starlight" => { name: "True Starlight", price: 69900, sold: false },
+    "glass_drops" => { name: "Glass Drops", price: 79900, sold: false }
   }
 
   # Om frontend skickar visningsnamn (t ex "Pearls"), mappa dem till id:
@@ -66,19 +66,19 @@ post "/create-checkout-session" do
 
   # Normalisera indata: om element är display-namn, konvertera till id
   normalized_ids = product_ids.map do |p|
-    next nil if p.nil?
-    s = p.to_s.strip
-    key = s.downcase
-    if products_catalog.key?(key)             # redan ett id som "pearls"
-      key
-    elsif name_to_id.key?(key)               # ett display-namn som "pearls"
-      name_to_id[key]
-    else
-      nil
-    end
-  end.compact
+  next nil if p.nil?
+  key = p.to_s.strip.downcase
+  if products_catalog.key?(key) && !products_catalog[key][:sold]
+    key
+  elsif name_to_id.key?(key) && !products_catalog[name_to_id[key]][:sold]
+    name_to_id[key]
+  else
+    nil
+  end
+end.compact
 
-  halt 400, { error: "No valid products found" }.to_json if normalized_ids.empty?
+halt 400, { error: "No valid products available (sold out?)" }.to_json if normalized_ids.empty?
+
 
   # Räkna kvantiteter av samma produkt
   counts = Hash.new(0)
@@ -103,7 +103,8 @@ post "/create-checkout-session" do
       line_items: line_items,
       mode: "payment",
       success_url: "https://stripe-checkout2-1.onrender.com/success",
-      cancel_url: "https://stripe-checkout2-1.onrender.com/cancel"
+      cancel_url: "https://stripe-checkout2-1.onrender.com/cancel",
+      metadata: { products: normalized_ids.join(",") }
     )
   rescue Stripe::StripeError => e
     halt 500, { error: e.message }.to_json
@@ -124,5 +125,29 @@ end
 
 get '/cancel' do
   send_file File.join(settings.public_folder, 'cancel.html')
+end
+
+post "/webhook" do
+  payload = request.body.read
+  sig_header = request.env['HTTP_STRIPE_SIGNATURE']
+  endpoint_secret = ENV['STRIPE_WEBHOOK_SECRET'] # sätt webhook secret i Render
+
+  begin
+    event = Stripe::Webhook.construct_event(payload, sig_header, endpoint_secret)
+  rescue JSON::ParserError, Stripe::SignatureVerificationError => e
+    halt 400, "Invalid payload or signature"
+  end
+
+  case event.type
+  when 'checkout.session.completed'
+    session = event.data.object
+    products_bought = session.metadata.products.split(",") # ["pearls","blue_emerald"]
+
+    products_bought.each do |product_id|
+      products_catalog[product_id][:sold] = true if products_catalog[product_id]
+    end
+  end
+
+  status 200
 end
 
