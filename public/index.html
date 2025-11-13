@@ -10,7 +10,7 @@
 
   <script src="https://js.stripe.com/v3/"></script>
   <script>
-    const stripe = Stripe("pk_test_51SQ4aWLStOKJ123Vr4ukfznd7koQp9AlL7rZ1qG9NlKyt5trIuYmknNWRCORTXPCxvQDLP7ZGZdeavwNCcTKHA7k00jGHscZKg");
+    const stripe = Stripe("pk_live_51SQ4aNLWqK4VYJz2wFsCoeoYP5yFY2jHSD6yVSc8RQHJaaKOtOmBsEmfQTGLdTx6haItJbp53VBdAZEWGJK7znbv00IF2aoMrT");
 
     document.getElementById("checkout-button").addEventListener("click", async () => {
       const response = await fetch("/create-checkout-session", { method: "POST" });
