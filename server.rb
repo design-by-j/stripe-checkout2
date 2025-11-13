@@ -1,3 +1,4 @@
+require 'logger'
 require "sinatra"
 require "stripe"
 require "sinatra/cross_origin"
@@ -80,22 +81,25 @@ set :public_folder, "public"
 
 # Lägg detta högst upp, efter require och konfiguration
 PRODUCTS_CATALOG = {
-  "pearls" => { name: "Pearls", price: 69900, sold: false },
-  "green_drops" => { name: "Green Drops", price: 69900, sold: false },
-  "crystal_clear" => { name: "Crystal Clear", price: 69900, sold: false },
-  "blue_emerald" => { name: "Blue Emerald", price: 79900, sold: false },
-  "moonlight" => { name: "Moonlight", price: 79900, sold: false },
-  "gold_leaf" => { name: "Gold Leaf", price: 69900, sold: false },
-  "emerald_green_angel" => { name: "Emerald Green Angel", price: 79900, sold: false },
-  "golden_elegance" => { name: "Golden Elegance", price: 79900, sold: false },
-  "peace_heart" => { name: "Peace Heart", price: 69900, sold: false },
-  "crystal_luxury" => { name: "Crystal Luxury", price: 79900, sold: false },
-  "true_starlight" => { name: "True Starlight", price: 69900, sold: false },
-  "glass_drops" => { name: "Glass Drops", price: 79900, sold: false }
+  "pearls" => { name: "Pearls", price_id: "price_1SRs6qLWqK4VYJz2GVcUewoE", product_id: "prod_TOfRDTXU6NcdSI" },
+  "green_drops" => { name: "Green Drops", price_id: "price_1ST3ThLWqK4VYJz2nIk2JkMU", product_id: "prod_TPtGiEqRoeZAM3" },
+  "crystal_clear" => { name: "Crystal Clear", price_id: "price_1ST3WsLWqK4VYJz2ftL25jE2", product_id: "prod_TPtJep1gAkgBr6" },
+  "blue_emerald" => { name: "Blue Emerald", price_id: "price_1ST3bRLWqK4VYJz27H7SmTc5", product_id: "prod_TPtOFRxDx2scjs" },
+  "moonlight" => { name: "Moonlight", price_id: "price_1ST3c5LWqK4VYJz2f2ulNP6v", product_id: "prod_TPtOXe7lMK7gbm" },
+  "gold_leaf" => { name: "Gold Leaf", price_id: "price_1ST3d9LWqK4VYJz2gaYCIMhC", product_id: "prod_TPtPAiVGfXlstg" },
+  "emerald_green_angel" => { name: "Emerald Green Angel", price_id: "price_1ST3e7LWqK4VYJz2p6F4oBHo", product_id: "prod_TPtQmd2lI9kUUF" },
+  "golden_elegance" => { name: "Golden Elegance", price_id: "price_1ST3g0LWqK4VYJz2MCOxndRz", product_id: "prod_TPtSOvPGWUd1Py" },
+  "peace_heart" => { name: "Peace Heart", price_id: "price_1ST3gdLWqK4VYJz2RbPTmL1g", product_id: "prod_TPtTMyGVnpAKwt" },
+  "crystal_luxury" => { name: "Crystal Luxury", price_id: "price_1ST3i7LWqK4VYJz2YOqsHvqO", product_id: "prod_TPtV0RU3SWqlDk" },
+  "true_starlight" => { name: "True Starlight", price_id: "price_1ST3j9LWqK4VYJz2k2ujkg2E", product_id: "prod_TPtWlUXyLEPUsE" },
+  "glass_drops" => { name: "Glass Drops", price_id: "price_1ST3jxLWqK4VYJz2yWlBuqBe", product_id: "prod_TPtXtuhn9uS7Wj" }
 }
+
+
 
 post "/create-checkout-session" do
   content_type :json
+  request.body.rewind if request.body.respond_to?(:rewind)
   headers "Access-Control-Allow-Origin" => "*"  # CORS
 
   payload = {}
@@ -142,16 +146,15 @@ halt 400, { error: "No valid products available (sold out?)" }.to_json if normal
 
   # Bygg line_items för Stripe
   line_items = counts.map do |id, qty|
-    prod = PRODUCTS_CATALOG[id]
-    {
-      price_data: {
-        currency: "sek",
-        product_data: { name: prod[:name] },
-        unit_amount: prod[:price]
-      },
-      quantity: qty
-    }
-  end
+  product = PRODUCTS_CATALOG[id]
+  halt 400, { error: "Ogiltigt produkt-ID" }.to_json unless product
+
+  {
+    price: product[:price_id],
+    quantity: qty
+  }
+end
+
 
   begin
     session = Stripe::Checkout::Session.create(
@@ -199,8 +202,28 @@ post "/webhook" do
       session = event.data.object
       products_bought = session.metadata.products&.split(",") || []
       products_bought.each do |product_id|
-        PRODUCTS_CATALOG[product_id][:sold] = true if PRODUCTS_CATALOG[product_id]
+        catalog_entry = PRODUCTS_CATALOG[product_id]
+        next unless catalog_entry
+
+        # Hämta Stripe product_id
+        stripe_product_id = catalog_entry[:product_id]
+
+        # Hämta aktuell produkt från Stripe
+        product = Stripe::Product.retrieve(stripe_product_id)
+
+        # Minska stock
+        current_stock = product.metadata['stock'].to_i
+        new_stock = [current_stock - 1, 0].max
+
+        Stripe::Product.update(
+          stripe_product_id,
+          metadata: { stock: new_stock }
+        )
+
+        # Markera som sold i lokalt katalog om stock = 0
+        catalog_entry[:sold] = true if new_stock == 0
       end
+
 
       # Hämta adressen
   shipping_info  = session.customer_details&.address
@@ -221,5 +244,18 @@ post "/webhook" do
     halt 500, "Webhook Error"
   end
 end
+
+get "/product-stock" do
+  content_type :json
+  product_id = params["product_id"]
+  catalog_entry = PRODUCTS_CATALOG[product_id]
+  halt 404, { error: "Produkt ej hittad" }.to_json unless catalog_entry
+
+  stripe_product_id = catalog_entry[:product_id]
+  product = Stripe::Product.retrieve(stripe_product_id)
+
+  { stock: product.metadata["stock"].to_i }.to_json
+end
+
 
 
