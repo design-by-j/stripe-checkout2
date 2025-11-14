@@ -92,8 +92,7 @@ PRODUCTS_CATALOG = {
   "peace_heart" => { name: "Peace Heart", price_id: "price_1ST3gdLWqK4VYJz2RbPTmL1g", product_id: "prod_TPtTMyGVnpAKwt" },
   "crystal_luxury" => { name: "Crystal Luxury", price_id: "price_1ST3i7LWqK4VYJz2YOqsHvqO", product_id: "prod_TPtV0RU3SWqlDk" },
   "true_starlight" => { name: "True Starlight", price_id: "price_1ST3j9LWqK4VYJz2k2ujkg2E", product_id: "prod_TPtWlUXyLEPUsE" },
-  "glass_drops" => { name: "Glass Drops", price_id: "price_1ST3jxLWqK4VYJz2yWlBuqBe", product_id: "prod_TPtXtuhn9uS7Wj" },
-  "testprodukt" => { name: "Testprodukt", price_id: "price_1STR0fLWqK4VYJz2SHaJWSc6", product_id: "prod_TQHZEMXVxKPsp4" } 
+  "glass_drops" => { name: "Glass Drops", price_id: "price_1ST3jxLWqK4VYJz2yWlBuqBe", product_id: "prod_TPtXtuhn9uS7Wj" } 
 }
 
 
