@@ -189,6 +189,11 @@ get '/cancel' do
   send_file File.join(settings.public_folder, 'cancel.html')
 end
 
+get "/health" do
+  content_type :json
+  { status: "ok", timestamp: Time.now.to_i }.to_json
+end
+
 post "/webhook" do
   begin
     payload = request.body.read
